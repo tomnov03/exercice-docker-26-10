@@ -1,0 +1,40 @@
+services:
+  db:
+    image: mysql:8.4
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: dogsdb
+      MYSQL_USER: dogsuser
+      MYSQL_PASSWORD: dogspass
+    volumes:
+      - exo9-mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-uroot", "-prootpass"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  logs-api:
+    build: ./logs-api
+    ports:
+      - "8081:8081"
+
+  crud-api:
+    build: ./crud-api
+    environment:
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_NAME: dogsdb
+      DB_USER: dogsuser
+      DB_PASSWORD: dogspass
+      LOGS_API_URL: http://logs-api:8081
+    ports:
+      - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+      logs-api:
+        condition: service_started
+
+volumes:
+  exo9-mysql-data:
