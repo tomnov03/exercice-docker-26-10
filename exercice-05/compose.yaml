@@ -1,0 +1,29 @@
+services:
+  mysql:
+    image: mysql:8.4
+    networks:
+      - exo5-net
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: exo5db
+      MYSQL_USER: exo5user
+      MYSQL_PASSWORD: exo5pass
+    volumes:
+      - mysql-data:/var/lib/mysql
+    restart: unless-stopped
+
+  adminer:
+    image: adminer:4
+    networks:
+      - exo5-net
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+    depends_on:
+      - mysql
+
+networks:
+  exo5-net:
+
+volumes:
+  mysql-data:
