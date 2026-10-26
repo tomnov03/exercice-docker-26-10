@@ -1,0 +1,44 @@
+name: ci
+
+on:
+  push:
+    paths:
+      - "tp-evaluation-niveau/**"
+  pull_request:
+    paths:
+      - "tp-evaluation-niveau/**"
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: tp-evaluation-niveau
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Prepare fixtures
+        run: |
+          cp .env.example .env
+          mkdir -p secrets nginx/certs
+          echo "dummy-root" > secrets/db_root_password.txt
+          echo "dummy-user" > secrets/db_password.txt
+          openssl req -x509 -nodes -days 1 -newkey rsa:2048 \
+            -keyout nginx/certs/privkey.pem -out nginx/certs/fullchain.pem -subj "/CN=localhost"
+
+      - name: Validate compose file
+        run: docker compose -f compose.yaml config --quiet
+
+      - name: Reject privileged containers
+        run: |
+          if grep -q "privileged: true" compose.yaml; then
+            echo "privileged containers are not allowed"
+            exit 1
+          fi
+
+      - name: Reject plaintext passwords
+        run: |
+          if grep -E "PASSWORD: [^$]" compose.yaml | grep -v "_FILE"; then
+            echo "plaintext password found in compose.yaml"
+            exit 1
+          fi

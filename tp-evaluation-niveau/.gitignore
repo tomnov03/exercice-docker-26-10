@@ -1,0 +1,7 @@
+.env
+secrets/*.txt
+nginx/certs/*
+backups/*.sql
+backups/*.sql.gz
+backups/*.tar.gz
+!backups/.gitkeep
