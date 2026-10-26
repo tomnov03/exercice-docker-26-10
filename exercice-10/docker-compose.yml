@@ -1,0 +1,38 @@
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+      - ./init-db:/docker-entrypoint-initdb.d
+    restart: unless-stopped
+
+  app:
+    build: .
+    environment:
+      APP_NAME: ${APP_NAME}
+      APP_VERSION: ${APP_VERSION}
+      APP_ENV: ${APP_ENV}
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      UPLOAD_PATH: ${UPLOAD_PATH}
+      MAX_FILE_SIZE: ${MAX_FILE_SIZE}
+      LOG_LEVEL: ${LOG_LEVEL}
+      SHOW_SQL: ${SHOW_SQL}
+    ports:
+      - "8080:8080"
+    volumes:
+      - uploads:/app/uploads
+    depends_on:
+      - db
+    restart: unless-stopped
+
+volumes:
+  pg_data:
+  uploads:
